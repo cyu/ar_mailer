@@ -19,7 +19,7 @@ database for later delivery by a separate process, ar_sendmail.
 
 Add this to your environment.rb:
 
-  config.gem 'cyu-ar_mailer', :version => '1.4.4', :lib => 'ar_mailer', :source => 'http://gems.github.com'
+  config.gem 'cyu-ar_mailer', :lib => 'ar_mailer', :source => 'http://gems.github.com'
 
 And install the gem using rake:
 
