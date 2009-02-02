@@ -485,7 +485,7 @@ end
       log "authentication error, retrying: #{e.message}"
     end
     sleep delay
-  rescue Net::SMTPServerBusy, SystemCallError, OpenSSL::SSL::SSLError
+  rescue Net::SMTPServerBusy, SystemCallError, OpenSSL::SSL::SSLError, EOFError
     # ignore SMTPServerBusy/EPIPE/ECONNRESET from Net::SMTP.start's ensure
   end
 
