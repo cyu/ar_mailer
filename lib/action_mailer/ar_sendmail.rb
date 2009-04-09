@@ -1,5 +1,6 @@
 require 'optparse'
 require 'net/smtp'
+require 'smtp_tls' unless Net::SMTP.instance_methods.include?("enable_starttls_auto")
 require 'rubygems'
 
 class Object # :nodoc:
@@ -435,22 +436,21 @@ end
   # Delivers +emails+ to ActionMailer's SMTP server and destroys them.
 
   def deliver(emails)
-    return if emails.empty?
-    
-    user = smtp_settings[:user] || smtp_settings[:user_name]
+    settings = [
+      smtp_settings[:domain],
+      (smtp_settings[:user] || smtp_settings[:user_name]),
+      smtp_settings[:password],
+      smtp_settings[:authentication]
+    ]
     
     smtp = Net::SMTP.new(smtp_settings[:address], smtp_settings[:port])
-    
-    if smtp_settings[:tls]
-      smtp.enable_starttls
-    elsif smtp.respond_to?(:enable_starttls_auto)
-      smtp.enable_starttls_auto
-    end 
+    if smtp.respond_to?(:enable_starttls_auto)
+      smtp.enable_starttls_auto unless smtp_settings[:tls] == false
+    else
+      settings << smtp_settings[:tls]
+    end
         
-    smtp.start smtp_settings[:domain], user,
-        smtp_settings[:password],
-        smtp_settings[:authentication] do |session|
-      
+    smtp.start(*settings) do |session|
       @failed_auth_count = 0
       until emails.empty? do
         email = emails.shift
@@ -537,7 +537,8 @@ end
     loop do
       begin
         cleanup
-        deliver find_emails
+        emails = find_emails
+        deliver(emails) unless emails.empty?
       rescue ActiveRecord::Transactions::TransactionError
       end
       break if @once
